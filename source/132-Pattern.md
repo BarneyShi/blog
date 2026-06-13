@@ -1,19 +1,19 @@
 ---
 title: Leetcode 456 - 132 Pattern
-date: 2021-12-28 02:48:41
+date: 2026-June-13
 tags:
 - monotonic stack
 ---
 **`Note:`**
-- For every `i`, need to find a pair after `i` that `i < k < j`.
-- We have to iterate backwards cuz `j` and `k` appear after `i`.
+- For every `i`, need to find a pair `(j, k)` after `i` that `i < k < j`.
+- We have to iterate backwards cuz `j` and `k` appear after `i`. You need to have
+`(j,k)` ready when you do iterate for `i`.
 - What kind of data structure do we need?
-  - It should store all `3`s (`j`).
-  - All `2`s (`k`) that are smaller than `3`s should be popped out.
-  - We need to know the `max` of `2`s to make sure `2 > 1`.
+  - It can store potential `j`.
+  - All nums that are smaller than `j` need to be removed.
 - Yes, it's monotonic stack in `non-increasing order`.
-- Everytime we pop out a num, compare it with `k` to keep max.
-- Once `k > nums[i]`, it means there are `j`s in the stack that are bigger than `i` and `k`. Return true.
+- Everytime we pop out a num, compare it with `maxK` to keep max.
+- Once current num `< maxK`, it means we found nums[i]. And we're sure there are nums in the stack that are bigger than `nums[j]` and thus bigger than `nums[i]`.
 
 **`Question:`**
 
@@ -29,22 +29,27 @@ Explanation: There is a 132 pattern in the sequence: [1, 4, 2].
 ```
 
 **`Code:`**
-```javascript
-/**
- * @param {number[]} nums
- * @return {boolean}
- */
-var find132pattern = function(nums) {
-  let stack = [];
-  let k = Number.MIN_SAFE_INTEGER;
-  for (let i = nums.length - 1; i >= 0; i--) {
-    if (k > nums[i]) return true;
-    // Cannot use `<=` to compare the top of the stack vs nums[i] cuz it's possbile that `k === j` after popping.
-    while (stack.length > 0 && stack[stack.length - 1] < nums[i]) {
-      k = Math.max(stack.pop(), k);
+```csharp
+public class Solution {
+    public bool Find132pattern(int[] nums) {
+        var maxK = int.MinValue;
+        var stack = new Stack<int>();
+
+        for(var i = nums.Count()-1; i >=0; i--) {
+            var num = nums[i];
+            if (num < maxK) {
+                return true;
+            }
+
+            while (stack.Count > 0 && num > stack.Peek()){
+                var top = stack.Pop();
+                if (top > maxK) {
+                    maxK = top;
+                }
+            }
+            stack.Push(num);
+        }
+        return false;
     }
-    stack.push(nums[i]);
-  }
-  return false;
-};
+}
 ```
