@@ -1,17 +1,7 @@
----
-title: Leetcide 494 - Target sum
-date: 2021-09-05 02:39:55
-tags:
-- leetcode
-- dp
----
-**`Note:`**
-- This is also a `01 knapsack` problem.
-- To get the bagWeight, think in this way: `bagWeight - (sum - bagWeight) = target`. We pick what's gonna be `+` into our bag.
-- The DP formula is `DP[j] = DP[j] + DP[j - nums[i]]` based on two situations when we encounter `nums[i]`.
-  - When we don't pick `nums[i]`, then it's still `DP[j]` as our last iteration.
-  - When we pick `nums[i]`, then it's `DP[j - nums[i]]`.
-- Initialize `DP[0]` as `1` because if it's `0`, then all our results would be `0`.
+# Leetcide 494 - Target sum
+## Date: 2026-June-19
+
+**`Question`**
 
 You are given an integer array nums and an integer target.
 
@@ -32,23 +22,44 @@ Explanation: There are 5 ways to assign symbols to make the sum of nums be targe
 +1 + 1 + 1 + 1 - 1 = 3
 ```
 
-```javascript
-/**
- * @param {number[]} nums
- * @param {number} target
- * @return {number}
- */
-var findTargetSumWays = function(nums, target) {
-  const sum = nums.reduce((acc, cur) => acc + cur, 0);
-  const bagWeight = (sum + target) / 2;
-  if ((sum + target) % 2 !== 0 || (sum + target) < 0 || sum < target) return 0;
-  let dp = [...Array(bagWeight + 1).fill(0)];
-  dp[0] = 1;
-  for (let i = 0; i < nums.length; i++) {
-    for (let j = bagWeight; j >= nums[i]; j--) {
-      dp[j] += dp[j - nums[i]];
+**`Note:`**
+- This is also a `01 knapsack` problem.
+- Define dp array `dp[i,j]`. It means the `amount` of ways to get sum `j` using `first i` elements, which are `nums[0], nums[1], ...nums[i-1]`. Note, it's `nums[i-1]` not `nums[i]`.
+- For each num, you can `add` or `minus` it. When you `add` it, then you need `dp[i,j-num]` to combine to `(j-num+num=j`. Similarly, when you `minus` num, you need `dp[i,j+num]`.
+- Assume `sum` is sum of all nums. Then `j` is between `[-sum,sum]`.
+- Init `dp[0,0] = 1` means not pick any number to get sum 0. There's only 1 way.
+- About dimension of dp array. Number of i's is `nums.Length+1` because index `i` starts at `0` and ends at `length+1`.
+Number of j's is `2*sum+1` becauses it starts at `-sum` and ends at `sum`.
+- The induction formula is `dp[i,j] = dp[i-1,j-num] + dp[i-1,j+num]`.
+- However, because `j<0` is possible during iteration, so you must ensure `j-num > 0`. Then we need an `offset` for all `j`'s. Use `offset=sum` is suitable.
+- Finally, when you have `j-num+offset` and `j+num+offset`. You must make sure `j-num+offset>=0` and `j+num+offset<=2*sum` so no out of boundary exception.
+
+
+```csharp
+public class Solution {
+    public int FindTargetSumWays(int[] nums, int target) {
+        var sum = nums.Sum();
+        var dp = new int[nums.Length+1, 2*sum + 1];
+        var offset = sum;
+
+        if (target < -sum || target > sum) return 0;
+
+        dp[0,0+offset] = 1;
+
+        for (var i = 1; i <= nums.Length; i++) {
+            var num = nums[i-1];
+            for (var j = -sum; j <= sum; j++) {
+
+                if (j-num+offset >= 0) {
+                    dp[i,j+offset] += dp[i-1, j-num+offset];
+                }
+
+                if (j+num+offset <= 2*sum) {
+                    dp[i,j+offset] += dp[i-1, j+num+offset];
+                }
+            }
+        }
+        return dp[nums.Length, target + sum];
     }
-  }
-  return dp[bagWeight];
-};
+}
 ```
